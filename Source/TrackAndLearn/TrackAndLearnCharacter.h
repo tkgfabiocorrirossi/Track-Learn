@@ -32,6 +32,18 @@ class ATrackAndLearnCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
 
+	/** Speed Increase */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	float SpeedIncrease;
+
+	/** Speed Decrease TimeStep */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	float SpeedDecreaseTimeStep;
+
+	/** Speed Decrease */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	float SpeedDecrease;
+
 	/** Step 1 Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* Step1Action;
@@ -40,13 +52,11 @@ class ATrackAndLearnCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* Step2Action;
 
-	/** Look Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* LookAction;
-
 public:
 	ATrackAndLearnCharacter();
-	
+
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
 
 protected:
 
@@ -57,10 +67,9 @@ protected:
 
 	void Step2Handler(const FInputActionValue& Value);
 
-	/** Called for looking input */
-	void Look(const FInputActionValue& Value);		
-
 	int LastActionIndex;
+	float Speed;
+	float SpeedDecreaseTime;
 
 protected:
 	// APawn interface

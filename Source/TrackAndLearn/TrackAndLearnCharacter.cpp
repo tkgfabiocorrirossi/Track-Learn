@@ -16,8 +16,9 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 //////////////////////////////////////////////////////////////////////////
 // ATrackAndLearnCharacter
 
-ATrackAndLearnCharacter::ATrackAndLearnCharacter():LastActionIndex(0)
+ATrackAndLearnCharacter::ATrackAndLearnCharacter():LastActionIndex(-1), Speed(0.f), SpeedDecreaseTime(0.f)
 {
+	PrimaryActorTick.bCanEverTick = true;
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 		
@@ -74,13 +75,31 @@ void ATrackAndLearnCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
 		// Moving
 		EnhancedInputComponent->BindAction(Step1Action, ETriggerEvent::Triggered, this, &ATrackAndLearnCharacter::Step1Handler);
 		EnhancedInputComponent->BindAction(Step2Action, ETriggerEvent::Triggered, this, &ATrackAndLearnCharacter::Step2Handler);
-
-		// Looking
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ATrackAndLearnCharacter::Look);
 	}
 	else
 	{
 		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
+	}
+}
+
+void ATrackAndLearnCharacter::Tick(float DeltaTime)
+{
+	if (Controller != nullptr)
+	{
+		// find out which way is forward
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
+		// get forward vector
+		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		// add movement 
+		AddMovementInput(ForwardDirection, Speed);
+		SpeedDecreaseTime += DeltaTime;
+		if (SpeedDecreaseTime >= SpeedDecreaseTimeStep)
+		{
+			SpeedDecreaseTime = 0.f;
+			Speed -= SpeedDecrease;
+			Speed = FMath::Clamp(Speed, 0.f, 1.f);
+		}
 	}
 }
 
@@ -95,41 +114,11 @@ void ATrackAndLearnCharacter::Step2Handler(const FInputActionValue& Value)
 
 void ATrackAndLearnCharacter::Move(const int actionIndex)
 {
-	UE_LOG(LogTemplateCharacter, Log, TEXT("Movement input triggered"));
-							
-
-
-	LastActionIndex = actionIndex;
-	//// input is a Vector2D
-	//FVector2D MovementVector = Value.Get<FVector2D>();
-
-	//if (Controller != nullptr)
-	//{
-	//	// find out which way is forward
-	//	const FRotator Rotation = Controller->GetControlRotation();
-	//	const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-	//	// get forward vector
-	//	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-	//
-	//	// get right vector 
-	//	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-	//	// add movement 
-	//	AddMovementInput(ForwardDirection, MovementVector.Y);
-	//	AddMovementInput(RightDirection, MovementVector.X);
-	//}
-}
-
-void ATrackAndLearnCharacter::Look(const FInputActionValue& Value)
-{
-	// input is a Vector2D
-	FVector2D LookAxisVector = Value.Get<FVector2D>();
-
-	if (Controller != nullptr)
+	//UE_LOG(LogTemplateCharacter, Log, TEXT("Movement input triggered"));	
+	if (actionIndex != LastActionIndex)
 	{
-		// add yaw and pitch input to controller
-		AddControllerYawInput(LookAxisVector.X);
-		AddControllerPitchInput(LookAxisVector.Y);
+		Speed += SpeedIncrease;
+		Speed = FMath::Clamp(Speed, 0.f, 1.f);
 	}
+	LastActionIndex = actionIndex;
 }
