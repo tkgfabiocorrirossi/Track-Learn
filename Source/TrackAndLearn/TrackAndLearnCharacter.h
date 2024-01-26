@@ -32,13 +32,13 @@ class ATrackAndLearnCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
 
-	/** Jump Input Action */
+	/** Step 1 Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* JumpAction;
+	UInputAction* Step1Action;
 
-	/** Move Input Action */
+	/** Step 2 Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* MoveAction;
+	UInputAction* Step2Action;
 
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -51,11 +51,16 @@ public:
 protected:
 
 	/** Called for movement input */
-	void Move(const FInputActionValue& Value);
+	void Move(const int actionIndex);
+
+	void Step1Handler(const FInputActionValue& Value);
+
+	void Step2Handler(const FInputActionValue& Value);
 
 	/** Called for looking input */
-	void Look(const FInputActionValue& Value);
-			
+	void Look(const FInputActionValue& Value);		
+
+	int LastActionIndex;
 
 protected:
 	// APawn interface

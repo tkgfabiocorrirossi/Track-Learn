@@ -96,7 +96,7 @@ void ATrackAndLearnCharacter::Step2Handler(const FInputActionValue& Value)
 void ATrackAndLearnCharacter::Move(const int actionIndex)
 {
 	UE_LOG(LogTemplateCharacter, Log, TEXT("Movement input triggered"));
-							
+
 
 
 	LastActionIndex = actionIndex;
