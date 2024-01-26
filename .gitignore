@@ -1,0 +1,51 @@
+# Unreal Engine 5 specific ignores
+
+# Intermediate and binary files
+/Binaries/
+/Intermediate/
+/Saved/
+
+# Build results
+/DerivedDataCache/
+/Build/
+
+# Visual Studio cache and intermediate files
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Compiled Object files
+*.o
+*.obj
+*.dll
+*.exe
+*.dylib
+*.so
+
+# Backup files
+*.bak
+*.log
+*.tmp
+
+# Other files specific to the operating system
+.DS_Store # macOS specific
+*.swp # Vim swap files
+
+# Ignore specific project files that may contain sensitive information
+*.uprojectdirs
+
+# Cache files for UnrealVS
+*.opensdf
+*.sdf
+*.opendb
+
+# Shader working directory
+/Intermediate/Shaders/
+
+# Ignore specific asset files or directories as needed
+# /Content/SomeDirectory/
+
+# Add any additional files or directories specific to your workflow
+s
