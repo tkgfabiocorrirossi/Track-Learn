@@ -18,15 +18,12 @@ void AArrivalActor::BeginPlay()
 
 void AArrivalActor::NotifyActorBeginOverlap(AActor* OtherActor)
 {
-    if (HasAuthority()) // Ensure we're running on the server
+    // Cast OtherActor to your player character class to ensure it's a player
+    ATrackAndLearnCharacter* PlayerCharacter = Cast<ATrackAndLearnCharacter>(OtherActor);
+    if (PlayerCharacter != nullptr)
     {
-        // Cast OtherActor to your player character class to ensure it's a player
-        ATrackAndLearnCharacter* PlayerCharacter = Cast<ATrackAndLearnCharacter>(OtherActor);
-        if (PlayerCharacter != nullptr)
-        {
-            // Call a server-side function to handle the player reaching the cube
-            PlayerReachedEnd(PlayerCharacter);
-        }
+        // Call a server-side function to handle the player reaching the cube
+        PlayerReachedEnd(PlayerCharacter);
     }
 }
 
