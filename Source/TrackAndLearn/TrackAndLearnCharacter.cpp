@@ -16,8 +16,9 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 //////////////////////////////////////////////////////////////////////////
 // ATrackAndLearnCharacter
 
-ATrackAndLearnCharacter::ATrackAndLearnCharacter()
+ATrackAndLearnCharacter::ATrackAndLearnCharacter():LastActionIndex(-1), Speed(0.f), SpeedDecreaseTime(0.f)
 {
+	PrimaryActorTick.bCanEverTick = true;
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 		
@@ -30,14 +31,8 @@ ATrackAndLearnCharacter::ATrackAndLearnCharacter()
 	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f); // ...at this rotation rate
 
-	// Note: For faster iteration times these variables, and many more, can be tweaked in the Character Blueprint
-	// instead of recompiling to adjust them
-	GetCharacterMovement()->JumpZVelocity = 700.f;
-	GetCharacterMovement()->AirControl = 0.35f;
 	GetCharacterMovement()->MaxWalkSpeed = 500.f;
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
-	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
-	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
 
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -75,17 +70,11 @@ void ATrackAndLearnCharacter::BeginPlay()
 void ATrackAndLearnCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	// Set up action bindings
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
-		
-		// Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
-
+	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) 
+	{
 		// Moving
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ATrackAndLearnCharacter::Move);
-
-		// Looking
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ATrackAndLearnCharacter::Look);
+		EnhancedInputComponent->BindAction(Step1Action, ETriggerEvent::Triggered, this, &ATrackAndLearnCharacter::Step1Handler);
+		EnhancedInputComponent->BindAction(Step2Action, ETriggerEvent::Triggered, this, &ATrackAndLearnCharacter::Step2Handler);
 	}
 	else
 	{
@@ -93,38 +82,43 @@ void ATrackAndLearnCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
 	}
 }
 
-void ATrackAndLearnCharacter::Move(const FInputActionValue& Value)
+void ATrackAndLearnCharacter::Tick(float DeltaTime)
 {
-	// input is a Vector2D
-	FVector2D MovementVector = Value.Get<FVector2D>();
-
 	if (Controller != nullptr)
 	{
 		// find out which way is forward
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
 		// get forward vector
 		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-	
-		// get right vector 
-		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
 		// add movement 
-		AddMovementInput(ForwardDirection, MovementVector.Y);
-		AddMovementInput(RightDirection, MovementVector.X);
+		AddMovementInput(ForwardDirection, Speed);
+		SpeedDecreaseTime += DeltaTime;
+		if (SpeedDecreaseTime >= SpeedDecreaseTimeStep)
+		{
+			SpeedDecreaseTime = 0.f;
+			Speed -= SpeedDecrease;
+			Speed = FMath::Clamp(Speed, 0.f, 1.f);
+		}
 	}
 }
 
-void ATrackAndLearnCharacter::Look(const FInputActionValue& Value)
+void ATrackAndLearnCharacter::Step1Handler(const FInputActionValue& Value)
 {
-	// input is a Vector2D
-	FVector2D LookAxisVector = Value.Get<FVector2D>();
+	Move(0);
+}
+void ATrackAndLearnCharacter::Step2Handler(const FInputActionValue& Value)
+{
+	Move(1);
+}
 
-	if (Controller != nullptr)
+void ATrackAndLearnCharacter::Move(const int actionIndex)
+{
+	//UE_LOG(LogTemplateCharacter, Log, TEXT("Movement input triggered"));	
+	if (actionIndex != LastActionIndex)
 	{
-		// add yaw and pitch input to controller
-		AddControllerYawInput(LookAxisVector.X);
-		AddControllerPitchInput(LookAxisVector.Y);
+		Speed += SpeedIncrease;
+		Speed = FMath::Clamp(Speed, 0.f, 1.f);
 	}
+	LastActionIndex = actionIndex;
 }
